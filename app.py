@@ -252,7 +252,7 @@ with tab4:
                 
                 # Create a visually distinct section for this failing metric
                 st.markdown(f"### ⚠️ Area for Improvement: {m_name}")
-                st.info(f"Detected {len(failed_df)} sub-par responses requiring attention.")
+                st.info(f"Detected {len(failed_df)} sub-par responses requiring attention. Gemini 2.5 Pro is analyzing the failures and generating recommendations...")
                 
                 # Compile the failures into a text string for Gemini
                 failures_list = failed_df[['input', reason_c]].to_dict('records')

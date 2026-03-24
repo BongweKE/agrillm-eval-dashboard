@@ -93,12 +93,11 @@ st.divider()
 # ==========================================
 # 4. Tabbed Interface Architecture
 # ==========================================
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab1, tab2, tab3, tab4 = st.tabs([
     "📊 Executive Overview", 
     "🛡️ Safety & Relevancy", 
     "🌱 Domain Specifics", 
-    "🛠️ Rec: Fix Factual Accuracy", 
-    "⚖️ Rec: Fix Data Sovereignty"
+    "💡 Automated Recommendations"
 ])
 
 # --- TAB 1: EXECUTIVE OVERVIEW ---
@@ -197,48 +196,73 @@ def generate_recommendation(failures_text, topic):
     except Exception as e:
         return f"Error generating recommendation: {e}\n\nPlease check your API key or network connection."
 
-# --- TAB 4: RECOMMENDATION - FACTUAL ACCURACY ---
+# --- TAB 4: AUTOMATED RECOMMENDATIONS ---
 with tab4:
-    st.subheader(f"🛠️ Action Plan: Improving Factual Accuracy (Current: {metrics['Factual Accuracy']*100:.0f}%)")
+    st.subheader("💡 Automated AI Action Plans")
+    st.markdown("Dynamically generated strategic recommendations for any evaluation metrics scoring below 100%.")
     
-    if col_fac:
-        fac_reason = get_col(df, ['AgroforestryFactualAccuracy[GEval]_reason', 'AgroforestryFactualAccuracy_reason'])
-        failed_fac = df[df[col_fac] < 1.0]
-        
-        if not failed_fac.empty and fac_reason:
-            failures_list = failed_fac[['input', fac_reason]].to_dict('records')
-            failures_text = "\n".join([f"Input: {f['input']}\nReason: {f[fac_reason]}" for f in failures_list])
-            
-            with st.spinner("Generating AI-driven action plan using Gemini..."):
-                rec = generate_recommendation(failures_text, "Agroforestry Factual Accuracy")
-            st.markdown(rec)
-            
-            with st.expander("View the Specific Factual Failures in the Dataset"):
-                st.dataframe(failed_fac[['input', fac_reason]], hide_index=True)
-        else:
-            st.success("No factual accuracy failures detected! Great job.")
-    else:
-        st.info("Factual Accuracy metric not found in the dataset.")
+    # 1. Define the metrics we want to monitor dynamically
+    monitored_metrics = [
+        {
+            "name": "Agroforestry Factual Accuracy", 
+            "score_col": col_fac, 
+            "reason_col": get_col(df, ['AgroforestryFactualAccuracy[GEval]_reason', 'AgroforestryFactualAccuracy_reason'])
+        },
+        {
+            "name": "Data Sovereignty and Ethics", 
+            "score_col": col_sov, 
+            "reason_col": get_col(df, ['DataSovereigntyandEthics[GEval]_reason', 'DataSovereigntyandEthics_reason'])
+        },
+        {
+            "name": "Contextual Localization", 
+            "score_col": col_loc, 
+            "reason_col": get_col(df, ['ContextualLocalization[GEval]_reason', 'ContextualLocalization_reason'])
+        },
+        {
+            "name": "Answer Relevancy", 
+            "score_col": col_rel, 
+            "reason_col": get_col(df, ['AnswerRelevancy_reason'])
+        }
+    ]
 
-# --- TAB 5: RECOMMENDATION - DATA SOVEREIGNTY ---
-with tab5:
-    st.subheader(f"⚖️ Action Plan: Enforcing Data Sovereignty (Current: {metrics['Data Sovereignty']*100:.0f}%)")
-    
-    if col_sov:
-        sov_reason = get_col(df, ['DataSovereigntyandEthics[GEval]_reason', 'DataSovereigntyandEthics_reason'])
-        failed_sov = df[df[col_sov] < 1.0]
-        
-        if not failed_sov.empty and sov_reason:
-            failures_list = failed_sov[['input', sov_reason]].to_dict('records')
-            failures_text = "\n".join([f"Input: {f['input']}\nReason: {f[sov_reason]}" for f in failures_list])
+    issues_found = False
+
+    # 2. Loop through each metric to check for failures
+    for metric in monitored_metrics:
+        score_c = metric["score_col"]
+        reason_c = metric["reason_col"]
+        m_name = metric["name"]
+
+        # Only proceed if the metric actually exists in the uploaded CSV
+        if score_c and reason_c:
+            # Filter for any row where the model didn't get a perfect score
+            failed_df = df[df[score_c] < 1.0]
             
-            with st.spinner("Generating AI-driven action plan using Gemini..."):
-                rec = generate_recommendation(failures_text, "Data Sovereignty and Ethics")
-            st.markdown(rec)
-            
-            with st.expander("View the Specific Sovereignty Failures in the Dataset"):
-                st.dataframe(failed_sov[['input', sov_reason]], hide_index=True)
-        else:
-            st.success("No data sovereignty failures detected! Great job.")
-    else:
-        st.info("Data Sovereignty metric not found in the dataset.")
+            if not failed_df.empty:
+                issues_found = True
+                
+                # Create a visually distinct section for this failing metric
+                st.markdown(f"### ⚠️ Area for Improvement: {m_name}")
+                st.info(f"Detected {len(failed_df)} sub-par responses requiring attention.")
+                
+                # Compile the failures into a text string for Gemini
+                failures_list = failed_df[['input', reason_c]].to_dict('records')
+                failures_text = "\n".join([f"- Prompt: {f['input']}\n  Judge Critique: {f[reason_c]}\n" for f in failures_list])
+                
+                # Fetch the recommendation
+                with st.spinner(f"Analyzing {m_name} failures with Gemini..."):
+                    rec = generate_recommendation(failures_text, m_name)
+                
+                # Display the recommendation
+                st.markdown(rec)
+                
+                # Provide the raw data dropdown
+                with st.expander(f"🔍 View the {len(failed_df)} specific failures for {m_name}"):
+                    st.dataframe(failed_df[['input', reason_c]], hide_index=True)
+                
+                st.divider() # Adds a neat horizontal line between different metric recommendations
+
+    # 3. Handle the perfect scenario
+    if not issues_found:
+        st.success("🎉 All monitored metrics passed perfectly! No structural recommendations needed at this time.")
+        st.balloons()

@@ -125,7 +125,7 @@ with tab1:
         height=500,
         margin=dict(t=20, b=20, l=20, r=20)
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
 
 # --- TAB 2: SAFETY & RELEVANCY ---
 with tab2:
@@ -137,7 +137,7 @@ with tab2:
             cols_to_show.append(get_col(df, [c]))
             
     safe_df = df[cols_to_show] if len(cols_to_show) > 2 else df
-    st.dataframe(safe_df, use_container_width=True, hide_index=True)
+    st.dataframe(safe_df, width='stretch', hide_index=True)
 
 # --- TAB 3: DOMAIN SPECIFICS (ERRORS) ---
 with tab3:
@@ -158,7 +158,7 @@ with tab3:
                     title="Factual Accuracy by Category"
                 )
                 fig_acc.update_yaxes(range=[-0.1, 1.1])
-                st.plotly_chart(fig_acc, use_container_width=True)
+                st.plotly_chart(fig_acc, width='stretch')
             else:
                 st.info("No Factual Accuracy data available.")
         
@@ -176,7 +176,7 @@ with tab3:
                     title="Data Sovereignty by Category"
                 )
                 fig_sov.update_yaxes(range=[-0.1, 1.1])
-                st.plotly_chart(fig_sov, use_container_width=True)
+                st.plotly_chart(fig_sov, width='stretch')
             else:
                 st.info("No Data Sovereignty data available.")
 

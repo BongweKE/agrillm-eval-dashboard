@@ -2,6 +2,6 @@ openai
 deepeval
 pandas
 google-genai
-streamlit
+streamlit>=1.30.0
 plotly
-altair<6
+altair

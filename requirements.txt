@@ -4,4 +4,4 @@ pandas
 google-genai
 streamlit
 plotly
-altair<5
+altair<6

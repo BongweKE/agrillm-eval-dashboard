@@ -1,0 +1,7 @@
+openai
+deepeval
+pandas
+google-genai
+streamlit
+plotly
+

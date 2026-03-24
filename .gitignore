@@ -2,4 +2,4 @@
 .streamlit/
 .venv/
 __pycache__/
-*.csv
+

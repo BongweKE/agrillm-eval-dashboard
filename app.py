@@ -23,13 +23,22 @@ uploaded_file = st.sidebar.file_uploader("Upload evaluation CSV", type=["csv"])
 # ==========================================
 @st.cache_data
 def load_data(file):
+    # 1. If the user explicitly uploads a file via the sidebar, prioritize that
     if file is not None:
         return pd.read_csv(file)
-    else:
-        # Default fallback
+    
+    # 2. If no file is uploaded, pull the default data directly from GitHub
+    github_url = "https://raw.githubusercontent.com/BongweKE/agrillm-eval-dashboard/main/agrillm_gemini_evaluation.csv"
+    
+    try:
+        # Pandas can read CSVs directly from standard http/https links
+        return pd.read_csv(github_url)
+    except Exception as e:
+        # 3. Final local fallback (useful for when you are testing locally without internet)
         if os.path.exists('agrillm_gemini_evaluation.csv'):
             return pd.read_csv('agrillm_gemini_evaluation.csv')
         else:
+            st.error(f"Could not load data from GitHub. Error: {e}")
             return pd.DataFrame()
 
 df = load_data(uploaded_file)

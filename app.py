@@ -185,7 +185,16 @@ with tab3:
 # ==========================================
 @st.cache_data(show_spinner=False)
 def generate_recommendation(failures_text, topic):
-    prompt = f"Based on the following evaluation failures regarding '{topic}', provide a specific strategic recommendation and architecture change to improve the model. The failures are:\n{failures_text}\n\nFormat as markdown."
+    model_url = "https://huggingface.co/AI71ai/Llama-agrillm-3.3-70B"
+    prompt = f"""You are an AI architect tasked with improving the performance of a specialized agricultural model.
+The model being evaluated is: {model_url} (A LLaMA 3.3 70B agricultural fine-tune).
+
+Based on the model's architecture and the following evaluation failures regarding '{topic}', provide specific, highly-tailored strategic recommendations to improve it.
+
+The failures are:
+{failures_text}
+
+Format your response as markdown, and ensure your recommendations are practically applicable to this specific open-source deployment."""
     try:
         client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
         response = client.models.generate_content(
